@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+RUN mkdir /src
+
+COPY ./src/metamusic /src
+
+COPY ./src/metamusic/albums.js /src
+COPY ./index.metamusic.js /src
+
+COPY ./package.json /src
+COPY ./package-lock.json /src
+
+RUN chown node -R /src
+
+WORKDIR /src
+
+EXPOSE 3000
+
+RUN npm ci --omit=dev
+
+CMD [ "npm", "run", "start:metamusic" ]

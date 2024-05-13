@@ -1,0 +1,34 @@
+services:
+  muzak:
+    container_name: muzak
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.muzak
+    environment:
+      APP_NAME: muzak
+      APP_VERSION: "0.0.1"
+      METAMUSIC_URL: http://metamusic:3000 
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./:/src/muzak
+    networks:
+      - shared_network
+    restart: always
+  metamusic: 
+    container_name: metamusic
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.metamusic
+    environment:
+      APP_NAME: metamusic
+      APP_VERSION: "0.0.1"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/src/metamusic
+    restart: always
+    networks:
+      - shared_network
+networks:
+  shared_network:
