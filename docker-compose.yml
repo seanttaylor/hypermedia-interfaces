@@ -11,7 +11,7 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./:/src/muzak
+      - /src:/src/muzak
     networks:
       - shared_network
     restart: always
@@ -26,7 +26,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./:/src/metamusic
+      - /src:/src/metamusic
     restart: always
     networks:
       - shared_network

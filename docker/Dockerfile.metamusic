@@ -4,7 +4,7 @@ RUN mkdir /src
 
 COPY ./src/metamusic /src
 
-COPY ./src/metamusic/albums.js /src
+#COPY ./src/metamusic/albums.js /src
 COPY ./index.metamusic.js /src
 
 COPY ./package.json /src

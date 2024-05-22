@@ -3,8 +3,11 @@ import figlet from 'figlet';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import { promisify } from 'util';
+import * as uriTemplate from 'uri-template';
 
-import { albums, generateAlbumTrackPatchSpec } from './albums.js';
+import { AlbumService } from '/src/albums.js';
+import { AlbumServicePacalCaseStrategy, AlbumServiceCamelCaseStrategy } from '/src/strategies.js';
+
 
 const PORT = 3000;
 const APP_NAME = process.env.APP_NAME || 'metamusic';
@@ -20,47 +23,54 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(morgan('tiny'));
 
 const basePatch = {
-  latest: [
-    { op: 'move', from: '/AlbumId', path: '/album_id' },
-    { op: 'move', from: '/AlbumTitle', path: '/album_title' },
-    { op: 'move', from: '/ReleaseDate', path: '/release_date' },
-    { op: 'move', from: '/Genre', path: '/genre' },
-    { op: 'move', from: '/Tracks', path: '/tracks' },
-    { op: 'move', from: '/Artist', path: '/artist' },
-  ],
-  v2: [
-    { op: 'move', from: '/albumId', path: '/album_id' },
-    { op: 'move', from: '/albumTitle', path: '/album_title' },
-    { op: 'move', from: '/releaseDate', path: '/release_date' },
-    { op: 'move', from: '/genre', path: '/genre' },
-    { op: 'move', from: '/tracks', path: '/tracks' },
-    { op: 'move', from: '/artist', path: '/artist' },
+  v3: [
+    { op: 'move', from: '/albumIdentifier', path: '/album_id' },
+    { op: 'move', from: '/title', path: '/album_title' },
+    { op: 'move', from: '/releaseDateISO', path: '/release_date' },
+    { op: 'move', from: '/category', path: '/genre' },
+    { op: 'move', from: '/trackListing', path: '/tracks' },
+    { op: 'move', from: '/artistName', path: '/artist' },
   ],
 };
 
-const renderedPatches = {
-  latest: {},
-  v2: {}
-}; 
+const strategies = {
+  v1: new AlbumServicePacalCaseStrategy(),
+  latest: new AlbumServiceCamelCaseStrategy()
+};
+
+const resolvedPatches = {
+  v2: {},
+  latest: {}
+};
+
+const myAlbumService = new AlbumService();
 
 /**
  * Get album metadata by album id
  */
 app.get('/albums/:id', async (req, res) => {
-  const album = albums[req.params.id];
-  const albumList = [album];
   const version = req.query.version || 'latest';
-  const patchSpec = generateAlbumTrackPatchSpec(album.Tracks, basePatch.latest);
+  const albumId = req.params.id;
 
-  renderedPatches[version][req.params.id] = patchSpec;
+  myAlbumService.setStrategy(strategies[version]);
+
+  const album = await myAlbumService.getAlbum(albumId);
+  const albumList = [album];
+  const patchSpec = myAlbumService.generateAlbumPatchSpec(album);
+  const tpl = uriTemplate.parse(PATCH_SCHEMA_TEMPLATE_URI);
+  
+  resolvedPatches[version][req.params.id] = patchSpec;
 
   return res.json({
     _links: {
       self: {
-        href: `http://metamusic:3000/albums/${req.params.id}`
+        href: `http://metamusic:3000/albums/${albumId}`
       },
       get_patch_schema: {
-        href: PATCH_SCHEMA_TEMPLATE_URI,
+        href: tpl.expand({
+          albumId,
+          version,
+        }),
         title: 'Get JSON Patch specification to translate this resource to service interface schemas',
         templated: true
       }
@@ -71,7 +81,7 @@ app.get('/albums/:id', async (req, res) => {
 });
 
 /**
- * Get get ablum patch schema
+ * Get get album patch schema
  */
 app.get('/schemas/album/:id/patch', async (req, res) => {
   const albumId = req.params.id;
@@ -80,19 +90,19 @@ app.get('/schemas/album/:id/patch', async (req, res) => {
   return res.json({
     _links: {
       self: {
-        href: `http://metamusic:3000/schemas/album/${albumId}/patch`
+        href: `http://metamusic:3000/schemas/album/${albumId}/patch`,
+        title: 'The patch schema for this resource'
       },
       get_album: {
-        href: `http://metamusic:3000/albums/{albumId}`,
-        title: 'Get album metadata by id',
-        templated: true
+        href: `http://metamusic:3000/albums/${albumId}`,
+        title: 'Get album metadata by id from the provider',
       }
     },
     patches: [{
       id: albumId,
       version,
-      operations: renderedPatches[version][albumId],
-      operationCount: renderedPatches[version][albumId].length
+      operations: resolvedPatches[version][albumId],
+      operationCount: resolvedPatches[version][albumId].length
     }] 
   });
 });

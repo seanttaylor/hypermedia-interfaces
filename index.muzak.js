@@ -2,7 +2,6 @@ import express from 'express';
 import figlet from 'figlet';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
-import * as uriTemplate from 'uri-template';
 import jsonPatch from 'fast-json-patch';
 import { promisify } from 'util';
 
@@ -36,15 +35,10 @@ app.get('/albums/:id', async (req, res) => {
     const PATCH_SCHEMA_URI = albumMetadataResponse._links.get_patch_schema.href;
     const [albumMetadata] = albumMetadataResponse.albums;
 
-    console.log(albumMetadataResponse)
-    
-    const tpl = uriTemplate.parse(PATCH_SCHEMA_URI);
-    const uri = tpl.expand({
-        albumId,
-        version: 'latest'
-    });
-
-    const patchSchemaRequest = await fetch(uri);
+    console.log({ albumMetadataResponse });
+    console.log({ albumMetadata }) ;
+   
+    const patchSchemaRequest = await fetch(PATCH_SCHEMA_URI);
     const patchSchemaResponse = await patchSchemaRequest.json();
     const [ patchSpecification ] = patchSchemaResponse.patches
     const { operations } = patchSpecification;
@@ -52,7 +46,7 @@ app.get('/albums/:id', async (req, res) => {
     console.log({ patchSchemaResponse, operations });
     
     const patchedAlbumMetadata = jsonPatch.applyPatch(albumMetadata, operations).newDocument;
-    console.log(patchedAlbumMetadata);
+    console.log({ patchedAlbumMetadata });
 
   } catch(ex) {
     console.error(ex);

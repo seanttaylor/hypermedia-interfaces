@@ -7,7 +7,7 @@ export const albums = {
       Genre: ['Pop', 'Rock'],
       Tracks: [
         {
-          TrackId: 'n97PvnilLJ:001',
+          TrackId: 'urn:metamusic:album:n97PvnilLJ:track:001',
           TrackTitle: 'Summer Vibes',
           Duration: '3:30',
           Lyrics: 'Sunshine, beaches, and good times',
@@ -15,7 +15,7 @@ export const albums = {
           Bpm: 120,
         },
         {
-          TrackId: 'n97PvnilLJ:002',
+          TrackId: 'urn:metamusic:album:n97PvnilLJ:track:002',
           TrackTitle: 'City Lights',
           Duration: '4:10',
           Lyrics: 'Neon signs and bustling streets',
@@ -23,7 +23,7 @@ export const albums = {
           Bpm: 140,
         },
         {
-          TrackId: 'n97PvnilLJ:003',
+          TrackId: 'urn:metamusic:album:n97PvnilLJ:track:003',
           TrackTitle: 'In the Moment',
           Duration: '3:45',
           Lyrics: 'Cherish every second',
@@ -35,18 +35,41 @@ export const albums = {
 };
 
 /**
- * Create a unique patch spec for the album
+ * 
  */
-export const generateAlbumTrackPatchSpec = (tracks, patches) => {
-  tracks.forEach((track, index) => {
-      patches.push(
-          { op: 'move', from: `/tracks/${index}/TrackId`, path: `/tracks/${index}/track_id` },
-          { op: 'move', from: `/tracks/${index}/TrackTitle`, path: `/tracks/${index}/track_title` },
-          { op: 'move', from: `/tracks/${index}/Duration`, path: `/tracks/${index}/duration` },
-          { op: 'move', from: `/tracks/${index}/Lyrics`, path: `/tracks/${index}/lyrics` },
-          { op: 'move', from: `/tracks/${index}/Credits`, path: `/tracks/${index}/credits` },
-          { op: 'move', from: `/tracks/${index}/Bpm`, path: `/tracks/${index}/bpm` }
-      );
-  });
-  return patches;
-};
+export class AlbumService {
+  #strategy;
+  
+  constructor() {
+
+  }
+
+  /**
+   * 
+   * @param {Object} myStrategy 
+   */
+  setStrategy(myStrategy) {
+    if (!myStrategy) {
+      console.error('INTERNAL_ERROR: Could not set strategy');
+    }
+    this.#strategy = myStrategy;
+  }
+
+  /**
+   * 
+   * @param {String} albumId
+   * @returns {Promise<Object>} 
+   */
+  async getAlbum(albumId) {
+    return this.#strategy.getAlbum(albumId);
+  }
+
+  /**
+   * 
+   * @param {Object} album 
+   * @returns {Object}
+   */
+  generateAlbumPatchSpec(album) {
+    return this.#strategy.generateAlbumPatchSpec(album);
+  }
+}
