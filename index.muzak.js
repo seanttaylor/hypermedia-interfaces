@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import jsonPatch from 'fast-json-patch';
 import { promisify } from 'util';
 
-
 import { albums } from './albums.js';
 
 const PORT = 3001;
@@ -33,36 +32,48 @@ app.get('/albums/:id', async (req, res) => {
     const metadataRequest = await fetch(`${METAMUSIC_URL}/albums/${albumId}`);
     const albumMetadataResponse = await metadataRequest.json();
     const PATCH_SCHEMA_URI = albumMetadataResponse._links.get_patch_schema.href;
-    const [albumMetadata] = albumMetadataResponse.albums;
+    const [ albumMetadata ] = albumMetadataResponse.albums;
 
-    console.log({ albumMetadataResponse });
-    console.log({ albumMetadata }) ;
+    console.log(metadataRequest.headers);
+
+    // console.log('********* API response received from metamusic *********');
+    // console.log( { albumMetadataResponse });
+
+    // console.log('********* album metadata received from metamusic *********');
+    // console.log({ albumMetadata: JSON.stringify(albumMetadata) });
    
     const patchSchemaRequest = await fetch(PATCH_SCHEMA_URI);
     const patchSchemaResponse = await patchSchemaRequest.json();
     const [ patchSpecification ] = patchSchemaResponse.patches
     const { operations } = patchSpecification;
 
-    console.log({ patchSchemaResponse, operations });
+    // console.log('********* patch schema received from metamusic *********');
+    // console.log({ operations });
     
-    const patchedAlbumMetadata = jsonPatch.applyPatch(albumMetadata, operations).newDocument;
-    console.log({ patchedAlbumMetadata });
+    const patchedAlbumMetadata = jsonPatch.applyPatch({ ...album, ...albumMetadata }, operations).newDocument;
+
+    // console.log('********* patch schema applied metadata from metamusic *********');
+    // console.log({ patchedAlbumMetadata: JSON.stringify(patchedAlbumMetadata) });
+
+    return res.json({
+      _links: {
+        self: {
+          href: `http://muzak:3001/albums/${req.params.id}`
+        }, 
+        partner_patch_schema: {
+          href: `${PATCH_SCHEMA_URI}`,
+          title: `Uri referencing the JSON Patch document provided by an upstream API partner to translate to the interface schema`
+        }
+      }, 
+      albums: [ patchedAlbumMetadata ],
+      entries: albumList.length 
+    });
 
   } catch(ex) {
     console.error(ex);
   }
 
-  return res.json({
-    _links: {
-      self: {
-        href: `http://muzak:3001/albums/${req.params.id}`
-      },
-    }, 
-    albums: albumList,
-    entries: albumList.length 
-  });
 });
-
 
 app.use((req, res) => {
   res.status(404).send({ status: 404, error: 'Not Found' });
@@ -77,5 +88,5 @@ app.use((err, req, res, next) => {
 // SERVER START
 app.listen(PORT,() => {
   console.log(banner);
-  console.info(`Application listening on port ${PORT}`);
+  console.info(`Muzak listening on port ${PORT}`);
 });

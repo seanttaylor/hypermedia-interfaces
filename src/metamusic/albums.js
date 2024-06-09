@@ -39,6 +39,7 @@ export const albums = {
  */
 export class AlbumService {
   #strategy;
+  name;
   
   constructor() {
 
@@ -52,7 +53,10 @@ export class AlbumService {
     if (!myStrategy) {
       console.error('INTERNAL_ERROR: Could not set strategy');
     }
+
+    console.info(`Setting AlbumService strategy to ${myStrategy.name}`);
     this.#strategy = myStrategy;
+    this.name = myStrategy.name;
   }
 
   /**

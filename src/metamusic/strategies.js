@@ -11,7 +11,7 @@ const albums = {
             Genre: ['Pop', 'Rock'],
             Tracks: [
                 {
-                    TrackId: 'n97PvnilLJ:001',
+                    TrackId: 'urn:metamusic:album:n97PvnilLJ:track:001',
                     TrackTitle: 'Summer Vibes',
                     Duration: '3:30',
                     Lyrics: 'Sunshine, beaches, and good times',
@@ -19,7 +19,7 @@ const albums = {
                     Bpm: 120,
                 },
                 {
-                    TrackId: 'n97PvnilLJ:002',
+                    TrackId: 'urn:metamusic:album:n97PvnilLJ:track:002',
                     TrackTitle: 'City Lights',
                     Duration: '4:10',
                     Lyrics: 'Neon signs and bustling streets',
@@ -27,7 +27,7 @@ const albums = {
                     Bpm: 140,
                 },
                 {
-                    TrackId: 'n97PvnilLJ:003',
+                    TrackId: 'urn:metamusic:album:n97PvnilLJ:track:003',
                     TrackTitle: 'In the Moment',
                     Duration: '3:45',
                     Lyrics: 'Cherish every second',
@@ -46,7 +46,7 @@ const albums = {
             genre: ['Pop', 'Rock'],
             tracks: [
                 {
-                    trackId: 'n97PvnilLJ:001',
+                    trackId: 'urn:metamusic:album:n97PvnilLJ:track:001',
                     trackTitle: 'Summer Vibes',
                     duration: '3:30',
                     lyrics: 'Sunshine, beaches, and good times',
@@ -54,7 +54,7 @@ const albums = {
                     bpm: 120,
                 },
                 {
-                    trackId: 'n97PvnilLJ:002',
+                    trackId: 'urn:metamusic:album:n97PvnilLJ:track:002',
                     trackTitle: 'City Lights',
                     duration: '4:10',
                     lyrics: 'Neon signs and bustling streets',
@@ -62,7 +62,7 @@ const albums = {
                     bpm: 140,
                 },
                 {
-                    trackId: 'n97PvnilLJ:003',
+                    trackId: 'urn:metamusic:album:n97PvnilLJ:track:003',
                     trackTitle: 'In the Moment',
                     duration: '3:45',
                     lyrics: 'Cherish every second',
@@ -77,30 +77,30 @@ const albums = {
             albumIdentifier: 'n97PvnilLJ',
             title: 'The Best of 2022',
             artistName: 'Various Artists',
-            releaseDateYYYYMMDDD: '2022-04-20',
-            categor: ['Pop', 'Rock'],
+            releaseDate_YYYY_MM_DD: '2022-04-20',
+            category: ['Pop', 'Rock'],
             trackList: [
                 {
-                    id: 'n97PvnilLJ:001',
+                    id: 'urn:metamusic:album:n97PvnilLJ:track:001',
                     title: 'Summer Vibes',
                     duration: '3:30',
-                    lyrics: 'Sunshine, beaches, and good times',
+                    songLyrics: 'Sunshine, beaches, and good times',
                     credits: ['John Smith', 'Emma Johnson'],
                     bpm: 120,
                 },
                 {
-                    id: 'n97PvnilLJ:002',
+                    id: 'urn:metamusic:album:n97PvnilLJ:track:002',
                     title: 'City Lights',
                     duration: '4:10',
-                    lyrics: 'Neon signs and bustling streets',
+                    songLyrics: 'Neon signs and bustling streets',
                     credits: ['Sarah Brown', 'Michael Lee'],
                     bpm: 140,
                 },
                 {
-                    id: 'n97PvnilLJ:003',
+                    id: 'urn:metamusic:album:n97PvnilLJ:track:003',
                     title: 'In the Moment',
                     duration: '3:45',
-                    lyrics: 'Cherish every second',
+                    songLyrics: 'Cherish every second',
                     credits: ['David Wilson', 'Emily Parker'],
                     bpm: 110,
                 },
@@ -110,11 +110,11 @@ const albums = {
 };
 
 export class AlbumServiceRandomStrategy {
-    name = 'CamelCase';
+    name = 'random';
     #patches = [
         { op: 'move', from: '/albumIdentifier', path: '/album_id' },
         { op: 'move', from: '/title', path: '/album_title' },
-        { op: 'move', from: '/releaseDateYYYYMMDD', path: '/release_date' },
+        { op: 'move', from: '/releaseDate_YYYY_MM_DD', path: '/release_date' },
         { op: 'move', from: '/category', path: '/genre' },
         { op: 'move', from: '/trackList', path: '/tracks' },
         { op: 'move', from: '/artistName', path: '/artist' },
@@ -130,7 +130,7 @@ export class AlbumServiceRandomStrategy {
                 { op: 'move', from: `/tracks/${index}/id`, path: `/tracks/${index}/track_id` },
                 { op: 'move', from: `/tracks/${index}/title`, path: `/tracks/${index}/track_title` },
                 { op: 'move', from: `/tracks/${index}/duration`, path: `/tracks/${index}/duration` },
-                { op: 'move', from: `/tracks/${index}/lyrics`, path: `/tracks/${index}/lyrics` },
+                { op: 'move', from: `/tracks/${index}/songLyrics`, path: `/tracks/${index}/lyrics` },
                 { op: 'move', from: `/tracks/${index}/credits`, path: `/tracks/${index}/credits` },
                 { op: 'move', from: `/tracks/${index}/bpm`, path: `/tracks/${index}/bpm` }
             );
@@ -144,12 +144,12 @@ export class AlbumServiceRandomStrategy {
      * @returns {Promise<Object>} 
      */
     async getAlbum(albumId) {
-        return Promise.resolve(albums.camelCase[albumId]);
+        return Promise.resolve(albums.random[albumId]);
     }
 }
 
 export class AlbumServiceCamelCaseStrategy {
-    name = 'CamelCase';
+    name = 'camel';
     #patches = [
         { op: 'move', from: '/albumId', path: '/album_id' },
         { op: 'move', from: '/albumTitle', path: '/album_title' },
@@ -191,7 +191,7 @@ export class AlbumServiceCamelCaseStrategy {
  * 
  */
 export class AlbumServicePacalCaseStrategy {
-    name = 'PascalCase';
+    name = 'pascal';
     #patches = [
         { op: 'move', from: '/AlbumId', path: '/album_id' },
         { op: 'move', from: '/AlbumTitle', path: '/album_title' },
@@ -227,4 +227,4 @@ export class AlbumServicePacalCaseStrategy {
     async getAlbum(albumId) {
         return Promise.resolve(albums.pascalCase[albumId]);
     }
-  }
+}

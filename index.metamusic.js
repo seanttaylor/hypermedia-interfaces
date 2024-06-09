@@ -6,13 +6,13 @@ import { promisify } from 'util';
 import * as uriTemplate from 'uri-template';
 
 import { AlbumService } from '/src/albums.js';
-import { AlbumServicePacalCaseStrategy, AlbumServiceCamelCaseStrategy } from '/src/strategies.js';
+import { AlbumServicePacalCaseStrategy, AlbumServiceCamelCaseStrategy, AlbumServiceRandomStrategy } from '/src/strategies.js';
 
 
 const PORT = 3000;
 const APP_NAME = process.env.APP_NAME || 'metamusic';
 const APP_VERSION = process.env.APP_VERSION || '0.0.1';
-const PATCH_SCHEMA_TEMPLATE_URI = `http://${APP_NAME}:3000/schemas/album/{albumId}/patch{?version}`
+const PATCH_SCHEMA_TEMPLATE_URI = `http://${APP_NAME}:3000/schemas/album/{albumId}/patch{?version,name}`;
 
 const figletize = promisify(figlet);
 const banner = await figletize(`${APP_NAME} v${APP_VERSION}`);
@@ -22,44 +22,50 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(morgan('tiny'));
 
-const basePatch = {
-  v3: [
-    { op: 'move', from: '/albumIdentifier', path: '/album_id' },
-    { op: 'move', from: '/title', path: '/album_title' },
-    { op: 'move', from: '/releaseDateISO', path: '/release_date' },
-    { op: 'move', from: '/category', path: '/genre' },
-    { op: 'move', from: '/trackListing', path: '/tracks' },
-    { op: 'move', from: '/artistName', path: '/artist' },
-  ],
-};
-
 const strategies = {
   v1: new AlbumServicePacalCaseStrategy(),
-  latest: new AlbumServiceCamelCaseStrategy()
+  v2: new AlbumServiceCamelCaseStrategy(),
+  latest: new AlbumServiceRandomStrategy()
 };
 
 const resolvedPatches = {
+  v1 : {},
   v2: {},
   latest: {}
 };
 
 const myAlbumService = new AlbumService();
+const strategyNames = Object.keys(strategies);
+const chooseRandomStrategy = (strategies) => {
+  return strategies[Math.floor(Math.random()* strategies.length)];
+};
 
 /**
  * Get album metadata by album id
  */
 app.get('/albums/:id', async (req, res) => {
-  const version = req.query.version || 'latest';
+  const version = req.query.version || chooseRandomStrategy(strategyNames);
   const albumId = req.params.id;
 
   myAlbumService.setStrategy(strategies[version]);
 
   const album = await myAlbumService.getAlbum(albumId);
   const albumList = [album];
-  const patchSpec = myAlbumService.generateAlbumPatchSpec(album);
   const tpl = uriTemplate.parse(PATCH_SCHEMA_TEMPLATE_URI);
+  const name = myAlbumService.name;
   
-  resolvedPatches[version][req.params.id] = patchSpec;
+  if (!resolvedPatches[version][req.params.id]) {
+    resolvedPatches[version][req.params.id] = myAlbumService.generateAlbumPatchSpec(album);;
+  }
+  
+  res.set({
+    'x-vendor-metamusic-schema-patch': tpl.expand({
+      albumId,
+      version,
+      name: myAlbumService.name
+    }),
+    'x-vendor-metamusic-schema-version': `${version}:${name}`
+  });
 
   return res.json({
     _links: {
@@ -70,6 +76,7 @@ app.get('/albums/:id', async (req, res) => {
         href: tpl.expand({
           albumId,
           version,
+          name: myAlbumService.name
         }),
         title: 'Get JSON Patch specification to translate this resource to service interface schemas',
         templated: true
@@ -90,8 +97,9 @@ app.get('/schemas/album/:id/patch', async (req, res) => {
   return res.json({
     _links: {
       self: {
-        href: `http://metamusic:3000/schemas/album/${albumId}/patch`,
-        title: 'The patch schema for this resource'
+        href: `http://metamusic:3000/schemas/album/${albumId}/patch{?version,name}`,
+        title: 'The patch schema for this resource',
+        templated: true
       },
       get_album: {
         href: `http://metamusic:3000/albums/${albumId}`,
@@ -122,6 +130,6 @@ app.use((err, req, res, next) => {
 // SERVER START
 app.listen(PORT,() => {
   console.log(banner);
-  console.info(`Application listening on port ${PORT}`);
+  console.info(`Metamusic listening on port ${PORT}`);
 });
 
