@@ -80,6 +80,8 @@ becomes:
 
  >An extension could encompass the client sending the JSON Patch schema required to convert the response from the server _back_ from the Interface Schema to the internal model of the client.
 
+### Implementations Up Close
+
  Below the two approaches are compared: in the top diagram we see service clients converging on a single interface schema to communicate with the server, sending translation instructions to the server in their outbound messages. 
  
  In the lower diagram we see the individual clients each mapping the internal object model of the service. This is a more fragile approach as any changes to the internal object model breaks all clients. 
