@@ -1,3 +1,5 @@
+# Building Adaptive Services with Self-Describing Messages
+
 This project is a proof-of-conept for demonstrating a solution to tight binding to the internal data models between two web services that must communicate.
 
 The current state of the art is binding _directly_ to client or server internal data models such that any _structural_ changes to messages are breaking changes, no matter how superficial those changes might be. This is true even in cases where the **meaning** of hte message remains the same.
@@ -77,6 +79,8 @@ becomes:
  This interaction pattern closes the loop allowing client and server data models to be free from one another--making integrations significantly easier and much less error prone.
 
  >An extension could encompass the client sending the JSON Patch schema required to convert the response from the server _back_ from the Interface Schema to the internal model of the client.
+
+ ![Interface Schemas and Manual Mapping Compared](https://github.com/seanttaylor/hypermedia-interfaces/blob/master/docs/img/interface-schemas.png?raw=true)
 
  ### Summary
  The key insight of this project is that when shared understanding between clients and servers becomes the messages exchanged between the two _rather_ than client or server object models, we open up many possibilities for improving service adaptability and resilience in the face of change--which is the only thing we can count on.
